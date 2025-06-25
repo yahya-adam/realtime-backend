@@ -1,0 +1,342 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.1.1-1-ubi8
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 12181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_MAX_CLIENT_CNXNS: 100
+      ZOOKEEPER_HEAP_OPTS: "-Xmx1g -Xms1g"
+    ports: ["12181:12181"]
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 12181 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 10
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_log:/var/lib/zookeeper/log
+    networks:
+      realtime_net: {}
+       
+
+  kafka1:
+    image: confluentinc/cp-kafka:7.1.1-1-ubi8
+    container_name: kafka1
+    hostname: kafka1
+    restart: always
+    ports:
+       - "19091:19091"
+       - "19093:19093"  
+    networks:
+      realtime_net: {}
+    volumes:
+      - /home/uii0000/realtime-backend/kafka/kafka-1-creds/kafka.kafka1.keystore.pkcs12:/etc/kafka/secrets/kafka.kafka1.keystore.pkcs12
+      - /home/uii0000/realtime-backend/kafka/kafka-1-creds/kafka1_sslkey_creds:/etc/kafka/secrets/kafka1_sslkey_creds
+      - /home/uii0000/realtime-backend/kafka/kafka-1-creds/kafka1_keystore_creds:/etc/kafka/secrets/kafka1_keystore_creds
+      - /home/uii0000/realtime-backend/kafka/ca.crt:/etc/kafka/secrets/ca.crt
+      - /home/uii0000/realtime-backend/kafka/truststore/kafka.truststore.jks:/etc/kafka/secrets/kafka.truststore.jks
+      - /home/uii0000/realtime-backend/kafka/truststore/truststore_creds:/etc/kafka/secrets/truststore_creds
+      - /home/uii0000/realtime-backend/kafka/kafka.client.truststore.jks:/etc/kafka/secrets/kafka.client.truststore.jks
+      - /home/uii0000/realtime-backend/kafka/client-ssl.properties:/etc/kafka/secrets/client-ssl.properties
+      - data-kafka1:/var/lib/kafka/data
+      - ./log4j.properties:/etc/kafka/log4j.properties
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:12181
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/etc/kafka/log4j.properties"
+      KAFKA_LISTENERS: SSL://0.0.0.0:19093,BROKER://0.0.0.0:9091
+      KAFKA_ADVERTISED_LISTENERS: SSL://kafka1:19093,BROKER://kafka1:9091
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,SSL:SSL,BROKER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
+      KAFKA_CONTROLLER_LISTENER_NAMES: 
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.kafka1.keystore.pkcs12
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka1_keystore_creds
+      KAFKA_SSL_KEY_CREDENTIALS: kafka1_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: truststore_creds
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "HTTPS"
+      KAFKA_HEAP_OPTS: -Xmx2g -Xms1g
+      AFKA_TOOLS_HEAP_OPTS: -Xmx2g -Xms1g
+    healthcheck:
+      test: |
+        openssl s_client -connect kafka1:19093 -CAfile /etc/kafka/secrets/ca.crt </dev/null 2>&1 | grep -q "Verification: OK" || exit 1
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+
+  kafka2:
+    image: confluentinc/cp-kafka:7.1.1-1-ubi8
+    container_name: kafka2
+    hostname: kafka2
+    restart: always
+    ports:
+      - "29092:29092"
+      - "29094:29094"
+    networks:
+      realtime_net: {}
+    volumes:
+      - /home/uii0000/realtime-backend/kafka/kafka-2-creds/kafka.kafka2.keystore.pkcs12:/etc/kafka/secrets/kafka.kafka2.keystore.pkcs12
+      - /home/uii0000/realtime-backend/kafka/kafka-2-creds/kafka2_sslkey_creds:/etc/kafka/secrets/kafka2_sslkey_creds
+      - /home/uii0000/realtime-backend/kafka/kafka-2-creds/kafka2_keystore_creds:/etc/kafka/secrets/kafka2_keystore_creds
+      - /home/uii0000/realtime-backend/kafka/ca.crt:/etc/kafka/secrets/ca.crt
+      - /home/uii0000/realtime-backend/kafka/truststore/kafka.truststore.jks:/etc/kafka/secrets/kafka.truststore.jks
+      - /home/uii0000/realtime-backend/kafka/truststore/truststore_creds:/etc/kafka/secrets/truststore_creds
+      - /home/uii0000/realtime-backend/kafka/kafka.client.truststore.jks:/etc/kafka/secrets/kafka.client.truststore.jks
+      - /home/uii0000/realtime-backend/kafka/client-ssl.properties:/etc/kafka/secrets/client-ssl.properties
+      - data-kafka2:/var/lib/kafka/data
+      - ./log4j.properties:/etc/kafka/log4j.properties
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:12181
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/etc/kafka/log4j.properties"
+      KAFKA_LISTENERS: SSL://0.0.0.0:29094,BROKER://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: SSL://kafka2:29094,BROKER://kafka2:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,SSL:SSL,BROKER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
+      KAFKA_CONTROLLER_LISTENER_NAMES:
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.kafka2.keystore.pkcs12
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka2_keystore_creds
+      KAFKA_SSL_KEY_CREDENTIALS: kafka2_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: truststore_creds
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "HTTPS"
+      KAFKA_HEAP_OPTS: -Xmx2g -Xms1g
+      AFKA_TOOLS_HEAP_OPTS: -Xmx2g -Xms1g
+    healthcheck:
+      test: |
+        openssl s_client -connect kafka2:29094 -CAfile /etc/kafka/secrets/ca.crt </dev/null 2>&1 | grep -q "Verification: OK" || exit 1
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+             
+  postgresql:
+    secrets:
+      - postgres_password
+    image: postgres:latest
+    container_name: postgresql
+    volumes:
+        - postgres_data:/var/lib/postgresql/data
+        - ./log4j.properties:/usr/share/log4j.properties
+    environment:
+      JAVA_OPTS: "-Dlog4j.configuration=file:/usr/share/log4j.properties"
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password 
+      POSTGRES_DB: taxi_db
+    ports: ["5432:5432"]
+    networks:
+      realtime_net: {}
+    
+    healthcheck:  
+      test: ["CMD-SHELL", "pg_isready -U admin -d taxi_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10  
+
+  spark:
+    build:
+        context: .
+        dockerfile: Dockerfile-spark
+    image: my-spark-image:latest
+    container_name: spark
+    secrets:
+      - postgres_password
+    volumes:
+      - .:/app/code 
+      - ./models:/app/models:rw          
+      - ./jars:/app/jars:rw            
+      - ./spark_checkpoints:/opt/spark_checkpoints:rw
+      - ./health-check-spark.sh:/usr/local/bin/health-check-spark.sh:rw
+      - /home/uii0000/realtime-backend/kafka/ca.crt:/app/code/ca.crt:ro
+      - /home/uii0000/realtime-backend/kafka/truststore/kafka.truststore.jks:/app/truststore/kafka.truststore.jks
+      - /home/uii0000/realtime-backend/kafka/truststore/truststore_creds:/app/truststore/truststore_creds
+      - ./log4j.properties:/opt/spark/conf/log4j.properties
+      - ./spark_work:/opt/spark/work:rw
+    environment:
+        SPARK_MODE: master
+        SPARK_WORKER_PORT: 7078
+        SPARK_LOCAL_DIRS: /opt/spark/work  
+        SPARK_WORKER_DIR: /opt/spark/work
+        SPARK_DAEMON_JAVA_OPTS: "-Dlog4j.configuration=file:/opt/spark/conf/log4j.properties"
+        SPARK_HADOOP_FS_FILE_IMPL: org.apache.hadoop.fs.LocalFileSystem
+        SPARK_MASTER_PORT: 7077
+        SPARK_MASTER_WEBUI_PORT: 8080  
+        SPARK_LOCAL_IP: 0.0.0.0          
+        SPARK_MASTER_HOST: 0.0.0.0      
+        KAFKA_BOOTSTRAP_SERVERS: "kafka1:19093,kafka2:29094"
+        KAFKA_TRUSTSTORE_LOCATION: /app/truststore/kafka.truststore.jks
+        KAFKA_TRUSTSTORE_PASSWORD_FILE: /app/truststore/truststore_creds
+        SPARK_CHECKPOINT_DIR: /opt/spark/checkpoints
+    ports: ["4040:4040","17077:7077" ,"18080:8080"]
+    networks:
+      realtime_net: {}
+    depends_on:
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+    user: "1001:1001"
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/health-check-spark.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+  
+  spark-worker:
+    build:  
+      context: .
+      dockerfile: Dockerfile-spark
+    container_name: spark-worker
+    environment:
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: spark://spark:7077
+      SPARK_WORKER_WEBUI_PORT: 8081
+      SPARK_LOCAL_DIRS: /opt/spark/work
+      KAFKA_BOOTSTRAP_SERVERS: "kafka1:19093,kafka2:29094"
+      KAFKA_TRUSTSTORE_LOCATION: /app/truststore/kafka.truststore.jks
+      KAFKA_TRUSTSTORE_PASSWORD_FILE: /app/truststore/truststore_creds
+      SPARK_WORK_DIR: /opt/spark/work
+      SPARK_CHECKPOINT_DIR: /opt/spark/checkpoints
+      
+    volumes:
+      - .:/app/code
+      - ./models:/app/models:rw
+      - ./jars:/app/jars:rw
+      - ./spark_checkpoints:/opt/spark_checkpoints:rw
+      - /home/uii0000/realtime-backend/kafka/ca.crt:/app/code/ca.crt:ro
+      - /home/uii0000/realtime-backend/kafka/truststore/kafka.truststore.jks:/app/truststore/kafka.truststore.jks
+      - /home/uii0000/realtime-backend/kafka/truststore/truststore_creds:/app/truststore/truststore_creds
+      - ./log4j.properties:/opt/spark/conf/log4j.properties 
+      - ./spark_work:/opt/spark/work:rw
+    ports: ["8081:8081"]  
+    networks:
+      realtime_net: {}
+    depends_on:
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+    user: "1001:1001"
+        
+  api:
+    build: 
+        context: .
+        dockerfile: Dockerfile-api
+    ports: ["8000:8000"]
+    volumes:
+      - /home/uii0000/realtime-backend/kafka/kafka.client.truststore.jks:/etc/kafka/secrets/kafka.client.truststore.jks
+      - /home/uii0000/realtime-backend/kafka/client-ssl.properties:/etc/kafka/secrets/client-ssl.properties
+      - /home/uii0000/realtime-backend/kafka/ca.crt:/etc/kafka/secrets/ca.crt
+    networks:
+      realtime_net: {}
+    depends_on:
+      spark:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.18.1
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - xpack.security.enabled=false
+      - JAVA_OPTS= "-Dlog4j.configuration=file:/usr/share/log4j.properties"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    ports: ["9200:9200","9300:9300"]
+    networks:
+      realtime_net: {}
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./log4j.properties:/usr/share/log4j.properties
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.18.1
+    container_name: kibana
+    ports: ["5601:5601"]
+    volumes:
+      - ./log4j.properties:/usr/share/log4j.properties
+    environment:
+      ELASTICSEARCH_HOSTS: 'http://elasticsearch:9200'
+      JAVA_OPTS: "-Dlog4j.configuration=file:/usr/share/log4j.properties"
+    depends_on:
+      - elasticsearch
+    networks:
+      realtime_net: {}
+
+  logstash:
+    build:
+      context: .
+      dockerfile: Dockerfile-logstash
+    container_name: logstash
+    secrets:
+      - postgres_password
+    environment: 
+      DB_USER: admin
+      LS_JAVA_OPTS: -XX:+UseG1GC
+      JAVA_OPTS: "-Dlog4j.configuration=file:/usr/share/log4j.properties"
+    command: /logstash-entrypoint.sh
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./postgresql-42.7.3.jar:/usr/share/logstash/logstash-core/lib/jars/postgresql-42.7.3.jar
+      - logstash_data:/usr/share/logstash/data
+      - ./logstash-entrypoint.sh:/logstash-entrypoint.sh
+      - ./log4j.properties:/usr/share/log4j.properties
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9600"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks:
+      realtime_net: {}
+
+volumes:
+  zookeeper_data:
+  zookeeper_log:
+  postgres_data: 
+  elasticsearch_data:
+  data-kafka1:
+  data-kafka2:
+  logstash_data:
+
+
+networks:
+  realtime_net:
+    driver: bridge
+  
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password
+

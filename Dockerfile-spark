@@ -1,0 +1,43 @@
+FROM bitnami/spark:3.5.1
+
+USER root
+
+# 1. Install system dependencies
+RUN apt-get update && \
+    apt-get install -y wget netcat-openbsd iputils-ping curl && \ 
+    rm -rf /var/lib/apt/lists/*
+
+# 2. Create health check script
+RUN echo -e '#!/bin/bash\nset -e\nuntil curl -s http://localhost:8080 >/dev/null; do\n  echo "Waiting for Spark UI..."\n  sleep 10\ndone' > /usr/local/bin/health-check-spark.sh && \
+    chmod +x /usr/local/bin/health-check-spark.sh
+
+# 3. Create directories and set permissions
+RUN mkdir -p /app/models /app/jars /app/truststore /opt/spark_checkpoints /opt/spark/work && \
+    chown -R 1001:1001 /app /opt/spark_checkpoints /opt/spark/work && \
+    chmod -R 775 /app /opt/spark_checkpoints /opt/spark/work && \
+    chmod 755 /app/truststore && \
+    ln -s /opt/spark/work /tmp/spark
+
+# 4. Install Python dependencies
+RUN pip3 install --no-cache-dir numpy pandas
+
+# 5. Download Kafka dependencies
+RUN wget -P /opt/bitnami/spark/jars/ \
+  https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.12/3.5.1/spark-sql-kafka-0-10_2.12-3.5.1.jar \
+  https://repo1.maven.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_2.12/3.5.1/spark-token-provider-kafka-0-10_2.12-3.5.1.jar \
+  https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/3.5.1/kafka-clients-3.5.1.jar \
+  https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/2.11.1/commons-pool2-2.11.1.jar
+
+# 6. Download PostgreSQL driver
+RUN wget -P /opt/bitnami/spark/jars/ \
+  https://jdbc.postgresql.org/download/postgresql-42.7.3.jar
+
+
+# 7. Switch to non-root user
+USER 1001
+
+# 8. Set working directory
+WORKDIR /app/code
+
+
+
