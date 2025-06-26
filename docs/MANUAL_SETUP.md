@@ -21,16 +21,19 @@ while [ "$(docker inspect -f {{.State.Health.Status}} spark)" != "healthy" ]; do
   sleep 10
 done
 
-5. **Train ML model:**
+5. **Set right permissions for these directories**
+  chmod 777 models spark_checkpoints spark_work
+
+6. **Train ML model:**
 docker exec spark spark-submit /app/code/train_ml_model.py
 
-6. **Launch streaming processor:**
+7. **Launch streaming processor:**
 docker exec -d spark spark-submit /app/code/spark_processor.py
 
-7. **Run kafka producer**
+8. **Run kafka producer**
 docker exec api python kafka_producer.py
 
-8. **Start remaining services:**
+9. **Start remaining services:**
 docker compose up -d elasticsearch kibana logstash api
 
 echo "Waiting for Logstash..."
@@ -38,11 +41,11 @@ until docker logs logstash 2>&1 | grep -q "Pipelines running"; do
   sleep 5
 done
 
-9. **Verify system:**
+10. **Verify system:**
 docker compose logs -f  # Monitor startup
 curl http://localhost:8000/health  # API check
 
-10. **Final System Check**
+11. **Final System Check**
 echo "Services Status:"
 docker compose ps -a
 
