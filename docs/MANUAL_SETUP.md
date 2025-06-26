@@ -9,10 +9,8 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 # Repeat until all show "healthy"
 
 3. **Create Kafka topic:**
-docker exec kafka1 kafka-topics --bootstrap-server kafka1:19093 \
-  --command-config /etc/kafka/secrets/client-ssl.properties \
-  --create --topic test-topic --partitions 10 --replication-factor 2
-  
+docker exec kafka1 kafka-topics --bootstrap-server kafka1:19093 --command-config /etc/kafka/secrets/client-ssl.properties --create --topic test-topic --partitions 10 --replication-factor 2
+
 4. **Start Spark cluster:**
 docker compose up -d spark spark-worker
 
@@ -22,7 +20,7 @@ while [ "$(docker inspect -f {{.State.Health.Status}} spark)" != "healthy" ]; do
 done
 
 5. **Set right permissions for these directories:**
-  chmod 777 models  spark_checkpoints  spark_work
+  sudo chmod 777 models  spark_checkpoints  spark_work
 
 6. **Train ML model:**
 docker exec spark spark-submit /app/code/train_ml_model.py
