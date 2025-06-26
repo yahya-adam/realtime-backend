@@ -21,8 +21,8 @@ while [ "$(docker inspect -f {{.State.Health.Status}} spark)" != "healthy" ]; do
   sleep 10
 done
 
-5. **Set right permissions for these directories**
-  chmod 777 models spark_checkpoints spark_work
+5. **Set right permissions for these directories:**
+  chmod 777 models  spark_checkpoints  spark_work
 
 6. **Train ML model:**
 docker exec spark spark-submit /app/code/train_ml_model.py
