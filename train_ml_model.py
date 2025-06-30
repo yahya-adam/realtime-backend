@@ -32,8 +32,8 @@ print(df.columns)
 # # # Split raw data
 train_data, test_data= df.randomSplit([0.90, 0.10])
 
-#  #handling categorical values & preparing for ML
-# #assembling independent features
+# handling categorical values & preparing for ML
+# assembling independent features
 feature_columns=["timestamp_epoch","temp_f","device_id"]
 assembler= VectorAssembler(
     inputCols= feature_columns,
@@ -46,11 +46,8 @@ regressor= LinearRegression(
     labelCol='temp_c',
     regParam=0.1
 )
-
-# Pipeline Integration: Preprocessing steps (assembler, regressor)
 # Define pipeline stages
 pipeline = Pipeline(stages=[assembler,regressor])
-
 pipeline_model= pipeline.fit(train_data)
 
 test_predictions = pipeline_model.transform(test_data)
