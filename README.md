@@ -1,12 +1,13 @@
 ## What the Real-Time Project Does
 
 1. We train ML model using LinearRegression algorithm  
-   ![Model Training](./images/building_ML_model.png)
+   ![Model Training](./assets/building%20_ml_model.png)
 
 2. The model is deployed in Apache Spark
+   ![Model Deployment](./assets/model_deployed.png)
 
 3. The model predicts temperature as Spark processes data in real-time  
-   ![Temperature Prediction](./images/actual_predicted_temperatures.png)
+   ![Temperature Prediction](./assets/actual_predicted%20_temperatures.png)
 
 ---
 
