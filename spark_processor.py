@@ -159,13 +159,4 @@ signal.signal(signal.SIGINT, handle_shutdown)
 signal.signal(signal.SIGTERM, handle_shutdown)
 
 query.awaitTermination()
-# spark.streams.awaitAnyTermination()
-# # Single await for main query
-# try:
-#     query.awaitTermination()
-# except Exception as e:
-#     print(f"Stream terminated with exception: {str(e)}")
-# finally:
-#     debug_query.stop()
-#     spark.stop()
-#     print("Spark session stopped")
+

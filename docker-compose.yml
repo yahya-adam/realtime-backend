@@ -61,7 +61,7 @@ services:
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: truststore_creds
       KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "HTTPS"
       KAFKA_HEAP_OPTS: -Xmx2g -Xms1g
-      AFKA_TOOLS_HEAP_OPTS: -Xmx2g -Xms1g
+      KAFKA_TOOLS_HEAP_OPTS: -Xmx2g -Xms1g
     healthcheck:
       test: |
         openssl s_client -connect kafka1:19093 -CAfile /etc/kafka/secrets/ca.crt </dev/null 2>&1 | grep -q "Verification: OK" || exit 1
@@ -112,7 +112,7 @@ services:
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: truststore_creds
       KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "HTTPS"
       KAFKA_HEAP_OPTS: -Xmx2g -Xms1g
-      AFKA_TOOLS_HEAP_OPTS: -Xmx2g -Xms1g
+      KAFKA_TOOLS_HEAP_OPTS: -Xmx2g -Xms1g
     healthcheck:
       test: |
         openssl s_client -connect kafka2:29094 -CAfile /etc/kafka/secrets/ca.crt </dev/null 2>&1 | grep -q "Verification: OK" || exit 1

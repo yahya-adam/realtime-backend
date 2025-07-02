@@ -58,10 +58,7 @@ print(f"RMSE: {rmse}")
 # #saving mode;
 model_path = "/app/models/temperature_pipeline"
 
-# Delete existing model if it exists
-# if os.path.exists(model_path):
-#     shutil.rmtree(model_path)
-#     print(f"Deleted existing model directory: {model_path}")
+
 # directory creation
 os.makedirs(os.path.dirname(model_path), exist_ok=True)
 
