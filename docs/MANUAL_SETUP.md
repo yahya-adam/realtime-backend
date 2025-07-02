@@ -1,7 +1,9 @@
 ## Manual Setup Instructions
-1. **ensure all shell files are executable**
-  ```bash
-  sudo chmod *.sh
+
+1. **ensure all shell files are executable:**
+   ```bash
+   sudo chmod *.sh
+
 2. **Start foundation services:**
    ```bash
    docker compose up -d zookeeper kafka1 kafka2 postgresql
