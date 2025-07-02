@@ -2,7 +2,7 @@
 
 1. **ensure all shell files are executable:**
    ```bash
-   sudo chmod *.sh
+   sudo chmod *.sh *.txt
 
 2. **Start foundation services:**
    ```bash

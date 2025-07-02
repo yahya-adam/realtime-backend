@@ -23,7 +23,7 @@ For step-by-step instructions:
 ### Recommended Method: Quick Start
 Run the services:
 ```bash
-1. sudo chmod +x *.sh 
+1. sudo chmod +x *.sh *.txt 
 2. docker-compose up -d --build
 3. docker exec -it kafka1 kafka-topics --bootstrap-server kafka1:19093 --command-config /etc/kafka/secrets/client-ssl.properties --create --topic test-topic --partitions 10 --replication-factor 2
 4. sudo chmod 777 models spark_checkpoints spark_work
