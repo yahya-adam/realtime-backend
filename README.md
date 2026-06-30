@@ -29,14 +29,14 @@ The system ingests historical temperature sensor data `(temper_data.csv)` using 
 
 ![Real-time Architecture](images/Engineering_P1_S.png)
 
-The pipeline consists of the following stages:
-1- **Producer** `(kafka_producer.py)` – reads CSV data and publishes messages to Kafka `(test-topic)`.
-2- **Kafka Cluster** – two SSL‑secured brokers for high availability.
-3- **Spark Streaming** – consumes messages, parses JSON, applies ML model, writes predictions to PostgreSQL.
-4- **PostgreSQL** – persists predictions in table `temperature_predictions`.
-5- **Logstash** – periodically reads from PostgreSQL and indexes data into Elasticsearch.
-6- **Elasticsearch + Kibana** – storage and visualization of predictions.
-7- **FastAPI** – serves a REST endpoint `/aggregations` (currently returning static data; extendable to query PostgreSQL/Elasticsearch).
+- The pipeline consists of the following stages:
+- 1- **Producer** `(kafka_producer.py)` – reads CSV data and publishes messages to Kafka `(test-topic)`.
+- 2- **Kafka Cluster** – two SSL‑secured brokers for high availability.
+- 3- **Spark Streaming** – consumes messages, parses JSON, applies ML model, writes predictions to PostgreSQL.
+- 4- **PostgreSQL** – persists predictions in table `temperature_predictions`.
+- 5-  **Logstash** – periodically reads from PostgreSQL and indexes data into Elasticsearch.
+- 6-  **Elasticsearch + Kibana** – storage and visualization of predictions.
+- 7-  **FastAPI** – serves a REST endpoint `/aggregations` (currently returning static data; extendable to query PostgreSQL/Elasticsearch).
 
 ## Components
 
@@ -53,60 +53,60 @@ The pipeline consists of the following stages:
 |Logstash	   |`logstash`	            |Data sync from PostgreSQL to Elasticsearch|
 
 ## Prerequisites
-**Docker & Docker Compose** (version 3.8+)
-**Git**
-(Optional) Python 3.9+ for local testing
-Make sure ports listed in `docker-compose.yml` are free on your host:
-`12181` (Zookeeper)
-`19091`, `19093`, `29092`, `29094` (Kafka)
-`5432` (PostgreSQL)
-`4040`, `7077`, `8080`, `8081` (Spark)
-`8000` (API)
-`9200`, `9300` (Elasticsearch)
-`5601` (Kibana)
-`9600` (Logstash)
+- **Docker & Docker Compose** (version 3.8+)
+- **Git**
+- (Optional) Python 3.9+ for local testing
+- Make sure ports listed in `docker-compose.yml` are free on your host:
+- `12181` (Zookeeper)
+- `19091`, `19093`, `29092`, `29094` (Kafka)
+- `5432` (PostgreSQL)
+- `4040`, `7077`, `8080`, `8081` (Spark)
+- `8000` (API)
+- `9200`, `9300` (Elasticsearch)
+- `5601` (Kibana)
+- `9600` (Logstash)
 
 ## Setup & Configuration
-#### SSL Certificates for Kafka
-The Kafka brokers are configured with SSL (mutual TLS). All necessary certificate files are expected in the following paths (as mounted in `docker-compose.yml`):
-`/home/uii0000/realtime-backend/kafka/...` – adjust these paths to your actual directory.
+- #### SSL Certificates for Kafka
+- The Kafka brokers are configured with SSL (mutual TLS). All necessary certificate files are expected in the following paths (as mounted in `docker-compose.yml`):
+- `/home/uii0000/realtime-backend/kafka/...` – adjust these paths to your actual directory.
 Important: Replace all host‑specific paths in the `volumes` section of `docker-compose.yml` with your own absolute paths. For example, change:
 - /home/uii0000/realtime-backend/kafka/kafka-1-creds/...
-to your own location, or place the certificates inside the project root and use relative paths.
+- to your own location, or place the certificates inside the project root and use relative paths.
 
 #### Secrets
-Sensitive credentials are managed via Docker secrets:
-    `postgres_password` – read from `./secrets/postgres_password`
-    `Truststore password` – read from `./truststore/truststore_creds` (mounted as a file)
-Ensure these files exist before starting the stack.
+- Sensitive credentials are managed via Docker secrets:
+   - `postgres_password` – read from `./secrets/postgres_password`
+   - `Truststore password` – read from `./truststore/truststore_creds` (mounted as a file)
+- Ensure these files exist before starting the stack.
 
 ## How It Works
-#### Data Ingestion
+- #### Data Ingestion
 The Python script `kafka_producer.py`:
-    Reads the first 1,000,000 rows of `temper_data.csv` (a temperature dataset).
-    Splits the data across two threads for parallel sending.
-    Serializes each row to JSON and publishes to Kafka topic `test-topic` using SSL.
-    Configures producer with acks=1, batching, and retries for throughput.
+   - Reads the first 1,000,000 rows of `temper_data.csv` (a temperature dataset).
+   - Splits the data across two threads for parallel sending.
+   - Serializes each row to JSON and publishes to Kafka topic `test-topic` using SSL.
+   - Configures producer with acks=1, batching, and retries for throughput.
 #### Stream Processing & ML Inference
-`spark_processor.py` runs inside the Spark master container:
-   1- Creates a Spark Session with PostgreSQL and Kafka dependencies.
-   2- Reads from Kafka using SSL and a defined schema.
-   3- Cleans the data (removes escapes, drops nulls, parses timestamp).
-   4- Loads a pre‑trained PipelineModel from `/app/models/temperature_pipeline`.
-   5- For each micro‑batch (every 5 seconds):
-        Transforms the batch through the pipeline (vector assembler → linear regression).
-        Selects `timestamp`, `actual_temp_c`, and `predicted_temp_c`.
-        Writes the results to PostgreSQL table `temperature_predictions` using JDBC.
+- `spark_processor.py` runs inside the Spark master container:
+  - 1- Creates a Spark Session with PostgreSQL and Kafka dependencies.
+  - 2- Reads from Kafka using SSL and a defined schema.
+  - 3- Cleans the data (removes escapes, drops nulls, parses timestamp).
+  - 4- Loads a pre‑trained PipelineModel from `/app/models/temperature_pipeline`.
+  - 5- For each micro‑batch (every 5 seconds):
+      - Transforms the batch through the pipeline (vector assembler → linear regression).
+      - Selects `timestamp`, `actual_temp_c`, and `predicted_temp_c`.
+      -  Writes the results to PostgreSQL table `temperature_predictions` using JDBC.
 
 #### Storage & Serving
-PostgreSQL stores all predictions persistently.
-FastAPI (`api.py`) currently exposes a mock endpoint `/aggregations`. It can be extended to query PostgreSQL or Elasticsearch for aggregated stats (e.g., latest prediction, average error).
+- PostgreSQL stores all predictions persistently.
+- FastAPI (`api.py`) currently exposes a mock endpoint `/aggregations`. It can be extended to query PostgreSQL or Elasticsearch for - - - aggregated stats (e.g., latest prediction, average error).
 
 #### Visualization
-Logstash runs a pipeline (defined in `logstash.conf`) that periodically queries PostgreSQL and indexes new records into Elasticsearch.
-Kibana connects to Elasticsearch and allows you to build dashboards showing actual vs. predicted temperatures over time, error trends, etc.
+- Logstash runs a pipeline (defined in `logstash.conf`) that periodically queries PostgreSQL and indexes new records into Elasticsearch.
+- Kibana connects to Elasticsearch and allows you to build dashboards showing actual vs. predicted temperatures over time, error trends, etc.
 
-## API Endpoints
+## API Endpoints 
 
 |Endpoint	    |Method|Description
 |---------------|------|-----------------------------------------------------------------------------------------------------------------|
@@ -115,61 +115,61 @@ Kibana connects to Elasticsearch and allows you to build dashboards showing actu
 
 ## Running the System
 
-1- **Clone the repository** and navigate to the project root.
-2- **Prepare certificates and secrets** (see Setup & Configuration).
-3- **Start all services:**
-   ```bash
+- 1- **Clone the repository** and navigate to the project root.
+- 2- **Prepare certificates and secrets** (see Setup & Configuration).
+- 3- **Start all services:**
+ ```bash
    docker-compose up -d
    ```
   This builds custom images for Spark, Logstash, and the API using the provided Dockerfiles.
-4- **Wait for all services** to become healthy (check with docker-compose ps).
-5- **Run the Kafka producer** to ingest data:
-   ```bash
+- 4- **Wait for all services** to become healthy (check with docker-compose ps).
+- 5- **Run the Kafka producer** to ingest data:
+ ```bash
    docker-compose exec spark python /app/code/kafka_producer.py
    ```
   (Alternatively, run it from your host if you have Python dependencies installed.)
-6- **Monitor the streaming job** in Spark UI:
+- 6- **Monitor the streaming job** in Spark UI:
 Visit `http://localhost:4040` (Spark master UI) to see the streaming query progress.
-7- **Check PostgreSQL** for predictions:
-   ```bash
+- 7- **Check PostgreSQL** for predictions:
+ ```bash
    docker-compose exec postgresql psql -U admin -d taxi_db -c "SELECT * FROM temperature_predictions LIMIT 10;"
    ```
-8- **View Elasticsearch data:**
-   ```bash
+- 8- **View Elasticsearch data:**
+ ```bash
    curl -X GET "localhost:9200/_cat/indices?v"
    ```
-9- **Open Kibana** at `http://localhost:5601` and create an index pattern for the Logstash index (e.g., `logstash-*`) to visualize the data.
-10-**Test the API:**
-   ```bash
+- 9- **Open Kibana** at `http://localhost:5601` and create an index pattern for the Logstash index (e.g., `logstash-*`) to visualize the data.
+- 10-**Test the API:**
+ ```bash
     curl http://localhost:8000/aggregations
    ```
 ## Training the ML Model
-The model is trained offline using `train_ml_model.py`:
-  Reads `temperature_update.csv` (same schema).
-  Splits into train/test (90/10).
-  Builds a pipeline with `VectorAssembler` (features: `timestamp_epoch`, `temp_f`, `device_id`) and LinearRegression (label: `temp_c`).
-  Saves the pipeline to `/app/models/temperature_pipeline`.
-To retrain:
-  ```bash
+- The model is trained offline using `train_ml_model.py`:
+  - Reads `temperature_update.csv` (same schema).
+  - Splits into train/test (90/10).
+  - Builds a pipeline with `VectorAssembler` (features: `timestamp_epoch`, `temp_f`, `device_id`) and LinearRegression (label: `temp_c`).
+  - Saves the pipeline to `/app/models/temperature_pipeline`.
+- To retrain:
+ ```bash
    docker-compose exec spark python /app/code/train_ml_model.py
    ```
-After retraining, the streaming job will automatically load the new model on restart (or you can restart the container).
+- After retraining, the streaming job will automatically load the new model on restart (or you can restart the container).
 
 ## Monitoring & Health Checks
-Each service includes a health check defined in `docker-compose.yml`:
-    **Zookeeper:** `nc -z localhost 12181`
-    **Kafka:** `openssl s_client` verifies SSL connectivity.
-    **PostgreSQL:** `pg_isready`
-    **Spark:** custom script `health-check-spark.sh` (checks master and worker).
-    **API:** `curl http://localhost:8000/health`
-    **Elasticsearch:** `curl http://localhost:9200`
-    **Logstash:** curl `http://localhost:9600`
-You can monitor overall status with:
-   ```bash
+- Each service includes a health check defined in `docker-compose.yml`:
+   - **Zookeeper:** `nc -z localhost 12181`
+   - **Kafka:** `openssl s_client` verifies SSL connectivity.
+   - **PostgreSQL:** `pg_isready`
+   - **Spark:** custom script `health-check-spark.sh` (checks master and worker).
+   - **API:** `curl http://localhost:8000/health`
+   - **Elasticsearch:** `curl http://localhost:9200`
+   - **Logstash:** curl `http://localhost:9600`
+- You can monitor overall status with:
+```bash
    docker-compose ps
    ```
 ## Project Structure
-realtime-backend/
+- realtime-backend/
 ├── api.py                      # FastAPI application
 ├── docker-compose.yml          # Service orchestration
 ├── Dockerfile-api              # API container build
