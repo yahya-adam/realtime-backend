@@ -67,7 +67,7 @@ The system ingests historical temperature sensor data `(temper_data.csv)` using 
 - `9600` (Logstash)
 
 ## Setup & Configuration
-- #### SSL Certificates for Kafka
+#### SSL Certificates for Kafka
 - The Kafka brokers are configured with SSL (mutual TLS). All necessary certificate files are expected in the following paths (as mounted in `docker-compose.yml`):
 - `/home/uii0000/realtime-backend/kafka/...` – adjust these paths to your actual directory.
 Important: Replace all host‑specific paths in the `volumes` section of `docker-compose.yml` with your own absolute paths. For example, change:
@@ -81,7 +81,7 @@ Important: Replace all host‑specific paths in the `volumes` section of `docker
 - Ensure these files exist before starting the stack.
 
 ## How It Works
-- #### Data Ingestion
+#### Data Ingestion
 The Python script `kafka_producer.py`:
    - Reads the first 1,000,000 rows of `temper_data.csv` (a temperature dataset).
    - Splits the data across two threads for parallel sending.
