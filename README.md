@@ -169,29 +169,29 @@ Visit `http://localhost:4040` (Spark master UI) to see the streaming query progr
    docker-compose ps
    ```
 ## Project Structure
-- realtime-backend/
-├── api.py                      # FastAPI application
-├── docker-compose.yml          # Service orchestration
-├── Dockerfile-api              # API container build
-├── Dockerfile-logstash         # Logstash container build
-├── Dockerfile-spark            # Spark container build
-├── kafka_producer.py           # Data ingestion script
-├── spark_processor.py          # Streaming + ML inference
-├── train_ml_model.py           # Offline model training
-├── logstash.conf               # Logstash pipeline configuration
-├── logstash-entrypoint.sh      # Entrypoint for Logstash
-├── requirements.txt            # Python dependencies
-├── log4j.properties            # Logging configuration
-├── health-check-spark.sh       # Spark health check
-├── wait-for-*.sh               # Dependency wait scripts
-├── secrets/                    # Docker secrets (postgres_password)
-├── truststore/                 # Kafka truststore files
-├── models/                     # Saved ML models (mounted)
-├── jars/                       # Additional JARs (PostgreSQL driver)
-├── spark_checkpoints/          # Streaming checkpoint directory
-├── kafka/                      # SSL certificate generation scripts & keys
-├── ... (CSV data files)
-└── README.md
+realtime-backend/
+- ├── api.py                      # FastAPI application
+- ├── docker-compose.yml          # Service orchestration
+- ├── Dockerfile-api              # API container build
+- ├── Dockerfile-logstash         # Logstash container build
+- ├── Dockerfile-spark            # Spark container build
+- ├── kafka_producer.py           # Data ingestion script
+- ├── spark_processor.py          # Streaming + ML inference
+- ├── train_ml_model.py           # Offline model training
+- ├── logstash.conf               # Logstash pipeline configuration
+- ├── logstash-entrypoint.sh      # Entrypoint for Logstash
+- ├── requirements.txt            # Python dependencies
+- ├── log4j.properties            # Logging configuration
+- ├── health-check-spark.sh       # Spark health check
+- ├── wait-for-*.sh               # Dependency wait scripts
+- ├── secrets/                    # Docker secrets (postgres_password)
+- ├── truststore/                 # Kafka truststore files
+- ├── models/                     # Saved ML models (mounted)
+- ├── jars/                       # Additional JARs (PostgreSQL driver)
+- ├── spark_checkpoints/          # Streaming checkpoint directory
+- ├── kafka/                      # SSL certificate generation scripts & keys
+- ├── ... (CSV data files)
+- └── README.md
 
 ## Contributing
 
